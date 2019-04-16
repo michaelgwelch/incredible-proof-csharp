@@ -82,6 +82,13 @@ struct Session5
         return Or.Left<A, Imply<A, False>>(default(A));
     }
 
+    // Convenience method. May be useful in some situations,
+    // but in general it'll probably require more type parameters 
+    // Does case analysis over A v (A -> False)
+    static T CaseAnalysisOver<A,T>(Imply<A, T> leftProof, Imply<Imply<A,False>, T> rightProof)
+    {
+        return ExcludedMiddle<A>().CaseAnalysis(leftProof, rightProof);
+    }
 
 
     Or<A, Imply<A, False>> E1<A>()
@@ -134,7 +141,7 @@ struct Session5
 
     Imply<Imply<Imply<A,B>,A>,A> E7<A,B>()
     {
-        return premise => ExcludedMiddle<A>().CaseAnalysis(
+        return premise => CaseAnalysisOver<A,A>(
                 a => a,
                 aImpliesFalse => premise(a => Absurd<B>(aImpliesFalse(a)))
             );
@@ -145,8 +152,8 @@ struct Session5
 
     And<A,Imply<B,False>> E9<A,B>(Imply<Imply<A,B>,False> premise)
     {
-        return ExcludedMiddle<A>().CaseAnalysis(
-            a => ExcludedMiddle<B>().CaseAnalysis(
+        return CaseAnalysisOver<A,And<A,Imply<B,False>>>(
+            a => CaseAnalysisOver<B,And<A,Imply<B,False>>>(
                 b => Absurd<And<A,Imply<B,False>>>(premise(_ => b)),
                 bImpliesFalse => new And<A,Imply<B,False>>(a, bImpliesFalse)
             ),
